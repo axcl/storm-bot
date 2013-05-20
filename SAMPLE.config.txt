@@ -1,21 +1,20 @@
 # stOrm configuration
-
 {
 # Jabber account where stOrm will login
-'CONNECT_SERVER': 'jsmart.web.id', #aka host. fe, xmpp.ya.ru and jid node@ya.ru
+'CONNECT_SERVER': 'server.tld',
 'PORT': 5222,
-'JID': 'test_bot@jsmart.web.id',
-'PASSWORD': 'orangpintar',
-'RESOURCE': 'bot++',
+'JID': 'storm@server.tld',
+'PASSWORD': 'xxxxxXXXxxxxx',
+'RESOURCE': 'bot',
 
 # Chatroom nick
-'DEFAULT_NICK': 'stOrm-testing',
+'DEFAULT_NICK': 'stOrm-test',
 
-# Jabber accounts that will administrate Talisman
-'ADMINS': ['razor_blade@jsmart.web.id'],
-'ADMIN_PASSWORD': 'adaadaaja',
+# Jabber accounts that will administrate stOrm
+'ADMINS': ['admin1@server.tld','admin2@server.tld'],
+'ADMIN_PASSWORD': 'verysecretcredential',
 
-# Talisman will try to reconnect on disconnections
+# stOrm will try to reconnect on disconnections
 'AUTO_RESTART': 1,
 
 # Where to store HTML files from chatrooms logs

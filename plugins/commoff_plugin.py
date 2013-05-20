@@ -123,7 +123,7 @@ def get_commoff(gch):
 		pass
 	
 	
-register_command_handler(handler_commoff, 'commoff', ['admin','muc','all'], 20, 'Disconnects certain commands for current conf, without parameters shows the list of already power-off commands.', 'commoff [commands]', ['commoff','commoff poked disko version ping'])
-register_command_handler(handler_common, 'common', ['admin','muc','all'], 20, 'Includes certain commands for current conf.', 'common [commadns]', ['common poked disko version ping'])
+register_command_handler(handler_commoff, 'commoff', ['admin','muc','all'], 20, 'Disable certain commands for current conf, without parameters shows the list of already power-off commands.', 'commoff [commands]', ['commoff','commoff poked disko version ping'])
+register_command_handler(handler_common, 'common', ['admin','muc','all'], 20, 'Enable certain commands for current conf.', 'common [commadns]', ['common poked disko version ping'])
 
 register_stage1_init(get_commoff)

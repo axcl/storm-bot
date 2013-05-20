@@ -268,10 +268,10 @@ def handler_admin_leave(type, source, parameters):
 #		else:
 #			msg(groupchat, u'leaved by'+source[2])
 	if reason:
-		leave_groupchat(groupchat,)#u'leaved me by '+source[2]+u' reason:\n'+reason)
+		leave_groupchat(groupchat)#u'leaved me by '+source[2]+u' reason:\n'+reason)
 	else:
-		leave_groupchat(groupchat,)#u'leaved me by '+source[2])
-	reply(type, source, u'leaved ' + groupchat)
+		leave_groupchat(groupchat)#u'leaved me by '+source[2])
+#	reply(type, source, u'leaved ' + groupchat)
 
 
 def handler_admin_msg(type, source, parameters):
@@ -444,8 +444,8 @@ def handler_botautoaway_onoff(type, source, parameters):
 		if stmsg:
 			reply(type,source, u'I am now '+status+u' ('+stmsg+u')')
 		else:
-			reply(type,source, u'I am now '+status)"""
-			
+			reply(type,source, u'I am now '+status)
+"""			
 def get_autoaway_state(gch):
 	if not 'autoaway' in GCHCFGS[gch]:
 		GCHCFGS[gch]['autoaway']=0
@@ -457,8 +457,8 @@ def get_autoaway_state(gch):
 	if isinstance(GCHCFGS[gch].get('status'), str): #temp workaround
 		GCHCFGS[gch]['status']={'status': u'write "help" and follow the instructions to understand how to work with me', 'show': u''}
 	elif not isinstance(GCHCFGS[gch].get('status'), dict):
-		GCHCFGS[gch]['status']={'status': u'write "help" and follow the instructions to understand how to work with me', 'show': u''}"""
-
+		GCHCFGS[gch]['status']={'status': u'write "help" and follow the instructions to understand how to work with me', 'show': u''}
+"""
 def handler_delivery(type,source,body):
 	sender_jid = source[1]
 	
@@ -517,7 +517,7 @@ register_command_handler(handler_glob_msg_help, 'hglobmsg', ['superadmin','muc',
 register_command_handler(handler_popups_onoff, 'popups', ['admin','muc','all'], 30, 'Off (0) On (1) message about join/leaves, restarts/off, and also global news for certain conf. Without a parameter the bot will based on current status.', 'popups [conf] [1|0]', ['popups room@conference.server.tld 1','popups room@conference.server.tld 0','popups'])
 #register_command_handler(handler_botautoaway_onoff, 'autoaway', ['admin','muc','all'], 30, 'Off (0) on (1) auto-status away due to abscence of commands within 10 minutes, without an option it will show current status.', 'autoaway [1|0]', ['autoaway 1','autoaway'])
 #register_command_handler(handler_changebotstatus, 'stch', ['admin','muc','all'], 20, 'Change bot status according to the list:\naway - absent,\nxa - extended away,\ndnd - dont disturb,\nchat - free for chat,\nand also status message (if it given).', 'stch [status] [message]', ['stch away','stch away go to work'])
-register_command_handler(handler_remote, 'remote', ['superadmin','muc','all','*'], 40, 'Allows you to remotely execute commands and aliases in other conferences on behalf of the bot and get the result. Without parameters displays a list of conferences with the numbers, instead of the full name of the conference can use a number from the list.', 'remote <groupchat|number from the list> <comm> <parameters>', ['remote botzone@conference.jsmart.web.id ping guy','remote 2 time guy','remote'])
+register_command_handler(handler_remote, 'remote', ['superadmin','muc','all','*'], 40, 'Allows you to remotely execute commands and aliases in other conferences on behalf of the bot and get the result. Without parameters displays a list of conferences with the numbers, instead of the full name of the conference can use a number from the list.', 'remote <groupchat|number from the list> <comm> <parameters>', ['remote room@conference.server.tld ping guy','remote 2 time guy','remote'])
 register_command_handler(handler_redirect, 'redirect', ['admin','muc','all','*'], 20, 'Redirects the result of a command or an alias to the specified user in private. If the alias or command is not specified and instead the text, or any false, then sends the user a message.', 'redirect <nick>:<command>[<params>]|<mess>', ['redirect guy: ping lady'])
 
 register_stage1_init(get_autoaway_state)

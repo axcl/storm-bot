@@ -55,7 +55,7 @@ INFO = {'start': 0, 'msg': 0, 'prs':0, 'iq':0, 'cmd':0, 'thr':0}
 
 SVN_REPOS = 'http://storm-bot.googlecode.com/svn/trunk'
 
-BOT_VER = {'rev': 19, 'botver': {'name': 'stOrm', 'ver': 'ver. 1.02-%s [antiflood]', 'os': ''}}
+BOT_VER = {'rev': 23, 'botver': {'name': 'stOrm', 'ver': 'ver. 1.02-%s [antiflood]', 'os': ''}}
 ################################################################################
 
 COMMANDS = {}
@@ -474,7 +474,7 @@ def join_groupchat(groupchat=None, nick=DEFAULT_NICK, passw=None):
 		if check_file(groupchat,'macros.txt'):
 				pass
 		else:
-				msg(groupchat, u'Perhatian!!! Macro local base tidak dapat dibuat! Terjadi kesalahan, Harap segera laporkan kepada Admin-bot!')
+				msg(groupchat, u'Attention!!! Local macro base can not be create! There was an error, Please immediately report it to the Bot-Admin!')
 
 		add_gch(groupchat, nick, passw)
 
