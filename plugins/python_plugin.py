@@ -48,11 +48,13 @@ def handler_python_sh(type, source, parameters):
 def handler_python_calc(type, source, parameters):
 	parameters = parameters.strip()
 	if re.sub('([' + string.digits +']|[\+\-\/\*\^\.])','',parameters).strip() == '':
-	    try:
-    		return_value = str(eval(parameters))
-		time.sleep(1)
-	    except:
-		return_value = u'teach me to do it :)'
+		try:
+			if not parameters.count("**"):
+				return_value = str(eval(parameters))
+			else:
+				return_value = u":STOP: Square is unexpected"
+		except:
+			return_value = u'teach me to do it :)'
 	else:
 		return_value = u'you are a glitch'
 	reply(type, source, return_value)

@@ -240,21 +240,22 @@ def handler_order_presence(prs):
 	nick = prs.getFrom().getResource()
 	stmsg = prs.getStatus()
 	jid=get_true_jid(groupchat+'/'+nick)
-	item=findPresenceItem(prs)
+	role = prs.getRole()
+	affiliation = prs.getAffiliation()
 	
 	if groupchat in order_stats and jid in order_stats[groupchat]:
-		if item['affiliation'] in ['member','admin','owner']:
+		if affiliation in ['member','admin','owner']:
 			del order_stats[groupchat][jid]
 			return
 	else:
-		if item['affiliation']=='none':
+		if affiliation=='none':
 			order_stats[groupchat][jid]={'kicks': 0, 'devoice': {'cnd': 0, 'time': 0}, 'msgbody': None, 'prstime': {'fly': 0, 'status': 0}, 'prs': {'fly': 0, 'status': 0}, 'msg': 0, 'msgtime': 0}
 	
 	if nick in GROUPCHATS[groupchat] and user_level(groupchat+'/'+nick,groupchat)<11:
 		if groupchat in order_stats and jid in order_stats[groupchat]:
 			now = time.time()
 			if now-GROUPCHATS[groupchat][nick]['joined']>1:
-				if item['role']=='participant':
+				if role=='participant':
 					order_stats[groupchat][jid]['devoice']['cnd']=0
 				lastprs=order_stats[groupchat][jid]['prstime']['status']
 				order_stats[groupchat][jid]['prstime']['status']=now

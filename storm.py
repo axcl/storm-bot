@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#  Talisman core
-#  pybot.py
+#  stOrm bot core
+#  storm.py
 
+#  The talisman bot fork.
 #  Initial Copyright © 2002-2005 Mike Mintz <mikemintz@gmail.com>
 #  Modifications Copyright © 2007 Als <Als@exploit.in>
 #  Modifications Copyright © 2007 dimichxp <dimichxp@gmail.com>
@@ -19,51 +20,32 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 
+#  Storm copyright © 2013 Sherlock <sherlock3890@gmail.com> 
+
 from __future__ import with_statement
-import sys
-import os
+import gc, os, random, sys, threading, time, traceback
+
 os.chdir(os.path.dirname(sys.argv[0]))
+sys.path.insert(0, 'modules.zip')
 
-sys.path.insert(1, 'modules')
-
-import xmpp
-import time
-import threading
-import random
-import types
-import traceback
-import codecs
-import macros
-
+import macros, xmpp
 threading.stack_size(65536)
 
+sys = reload(sys)
+sys.setdefaultencoding("utf-8")
 ################################################################################
 GENERAL_CONFIG_FILE = 'config.txt'
+GENERAL_CONFIG = eval(open(GENERAL_CONFIG_FILE).read())
 
-fp = open(GENERAL_CONFIG_FILE, 'r')
-GENERAL_CONFIG = eval(fp.read())
-fp.close()
+for key in GENERAL_CONFIG:
+	globals()[key] = GENERAL_CONFIG[key]
 
-CONNECT_SERVER = GENERAL_CONFIG['CONNECT_SERVER']
-PORT = GENERAL_CONFIG['PORT']
-JID = GENERAL_CONFIG['JID']
-PASSWORD = GENERAL_CONFIG['PASSWORD']
-RESOURCE = GENERAL_CONFIG['RESOURCE']
 
 GROUPCHAT_CACHE_FILE = 'dynamic/chatrooms.list'
 GROUPCHAT_STATUS_CACHE_FILE='dynamic/statuses.list'
 GLOBACCESS_FILE = 'dynamic/globaccess.cfg'
 ACCBYCONF_FILE = 'dynamic/accbyconf.cfg'
 PLUGIN_DIR = 'plugins'
-
-DEFAULT_NICK = GENERAL_CONFIG['DEFAULT_NICK']
-ADMINS = GENERAL_CONFIG['ADMINS']
-ADMIN_PASSWORD = GENERAL_CONFIG['ADMIN_PASSWORD']
-
-AUTO_RESTART = GENERAL_CONFIG['AUTO_RESTART']
-
-PUBLIC_LOG_DIR = GENERAL_CONFIG['PUBLIC_LOG_DIR']
-PRIVATE_LOG_DIR = GENERAL_CONFIG['PRIVATE_LOG_DIR']
 
 ROLES={'none':0, 'visitor':0, 'participant':10, 'moderator':15}
 AFFILIATIONS={'none':0, 'member':1, 'admin':5, 'owner':15}
@@ -108,7 +90,7 @@ JCON = None
 
 smph = threading.BoundedSemaphore(value=30)
 mtx = threading.Lock()
-wsmph = threading.BoundedSemaphore(value=1)
+wsmph = threading.Semaphore()
 ################################################################################
 
 def initialize_file(filename, data=''):
@@ -124,16 +106,13 @@ def read_file(filename):
 	fp.close()
 	return data
 	
-def write_file_gag(filename, data):
-	mtx.acquire()
-	fp = file(filename, 'w')
-	fp.write(data)
-	fp.close()
-	mtx.release()
-	
 def write_file(filename, data):
 	with wsmph:
-		write_file_gag(filename, data)
+		mtx.acquire()
+		fp = file(filename, 'w')
+		fp.write(data)
+		fp.close()
+		mtx.release()
 
 def check_file(gch='',file=''):
 	pth,pthf='',''
@@ -288,22 +267,15 @@ def upkeep():
 	tmr=threading.Timer(60, upkeep)
 	tmr.start()
 	sys.exc_clear()
-	if os.name == 'nt':
-		try:
-			import msvcrt
-			msvcrt.heapmin()
-		except:
-			pass
-	import gc
 	gc.collect()
 		
 ################################################################################
-
+import types
 def get_true_jid(jid):
 	true_jid = ''
-	if type(jid) is types.ListType:
+	if isinstance(jid, list):
 		jid = jid[0]
-	if type(jid) is types.InstanceType:
+	if isinstance(jid, types.InstanceType):
 		jid = unicode(jid)
 	stripped_jid = string.split(jid, '/', 1)[0]
 	resource = ''
@@ -472,59 +444,39 @@ def has_access(source, level, gch):
 	return 0
 
 ################################################################################
-"""
-def join_groupchat(groupchat=None, nick=DEFAULT_NICK, passw=None):
-	if not groupchat in GROUPCHATS:
-		GROUPCHATS[groupchat] = {}
-	if check_file(groupchat,'macros.txt'):
-		pass
-	else:
-		print 'IO error when creating macros.txt for ',groupchat
-		
-	add_gch(groupchat, nick, passw)
-
-	prs=xmpp.protocol.Presence(groupchat+'/'+nick)
-	prs.setStatus(GCHCFGS[groupchat]['status']['status'])
-	prs.setShow(GCHCFGS[groupchat]['status']['show'])
-	pres=prs.setTag('x',namespace=xmpp.NS_MUC)
-	pres.addChild('history',{'maxchars':'0'})
-	if passw:
-		pres.setTagData('password', passw)
-	JCON.send(prs)
-"""
 
 def join_groupchat(groupchat=None, nick=DEFAULT_NICK, passw=None):
-        confstatus=[u'chat',u'Write "commands all" without quotation mark to get list of commands!']
-        if check_file(file='statuses.list'):
-          groupchatstatus = eval(read_file(GROUPCHAT_STATUS_CACHE_FILE))
-          if groupchatstatus.has_key(groupchat):
-            if groupchatstatus[groupchat]:
-              confstatusr=groupchatstatus[groupchat]
-              confstatus[0]=confstatusr[0]
-              if confstatusr[1]:
-                confstatus[1]=confstatusr[1]
-        else:
-          print 'Error: unable to create chatrooms status list file!'
+		confstatus=[u'chat',u'Write "commands all" without quotation mark to get list of commands!']
+		if check_file(file='statuses.list'):
+		  groupchatstatus = eval(read_file(GROUPCHAT_STATUS_CACHE_FILE))
+		  if groupchatstatus.has_key(groupchat):
+			if groupchatstatus[groupchat]:
+			  confstatusr=groupchatstatus[groupchat]
+			  confstatus[0]=confstatusr[0]
+			  if confstatusr[1]:
+				confstatus[1]=confstatusr[1]
+		else:
+		  print 'Error: unable to create chatrooms status list file!'
 
-        prs=xmpp.protocol.Presence(groupchat+'/'+nick)
+		prs=xmpp.protocol.Presence(groupchat+'/'+nick)
 
-      #Ставим статус и подпись | put the status and status message
-        prs.setShow(confstatus[0])
-        prs.setStatus(confstatus[1])
-        pres=prs.setTag('x',namespace=xmpp.NS_MUC)
-        prs.setTag('c', namespace=xmpp.NS_CAPS, attrs={'node':SVN_REPOS,'ver':BOT_VER['botver']['ver'] %(BOT_VER['rev'])})
-        pres.addChild('history',{'maxchars':'0','maxstanzas':'0'})
-        if passw:
-                pres.setTagData('password', passw)
-        JCON.send(prs)
-        if not groupchat in GROUPCHATS:
-                GROUPCHATS[groupchat] = {}
-        if check_file(groupchat,'macros.txt'):
-                pass
-        else:
-                msg(groupchat, u'Perhatian!!! Macro local base tidak dapat dibuat! Terjadi kesalahan, Harap segera laporkan kepada Admin-bot!')
+	  #Ставим статус и подпись | put the status and status message
+		prs.setShow(confstatus[0])
+		prs.setStatus(confstatus[1])
+		pres=prs.setTag('x',namespace=xmpp.NS_MUC)
+		prs.setTag('c', namespace=xmpp.NS_CAPS, attrs={'node':SVN_REPOS,'ver':BOT_VER['botver']['ver'] %(BOT_VER['rev'])})
+		pres.addChild('history',{'maxchars':'0','maxstanzas':'0'})
+		if passw:
+				pres.setTagData('password', passw)
+		JCON.send(prs)
+		if not groupchat in GROUPCHATS:
+				GROUPCHATS[groupchat] = {}
+		if check_file(groupchat,'macros.txt'):
+				pass
+		else:
+				msg(groupchat, u'Perhatian!!! Macro local base tidak dapat dibuat! Terjadi kesalahan, Harap segera laporkan kepada Admin-bot!')
 
-        add_gch(groupchat, nick, passw)
+		add_gch(groupchat, nick, passw)
 
 def leave_groupchat(groupchat,status=''):
 	prs=xmpp.Presence(groupchat, 'unavailable')
@@ -567,7 +519,7 @@ def reply(ltype, source, body):
 		msg(source[0], body)
 
 def isadmin(jid):
-	if type(jid) is types.ListType:
+	if isinstance(jid, list):
 		jid = jid[0]
 	jid = str(jid)
 	stripped_jid = string.split(jid, '/', 1)[0]
@@ -583,11 +535,6 @@ def isadmin(jid):
 	return 0
 
 ################################################################################
-def findPresenceItem(node):
-	for p in [x.getTag('item') for x in node.getTags('x',namespace=xmpp.NS_MUC_USER)]:
-		if p != None:
-			return p
-	return None
 
 def messageHnd(con, msg):
 	msgtype = msg.getType()
@@ -658,6 +605,8 @@ def messageHnd(con, msg):
 					LAST['gch'][fromjid.getStripped()]['thr']=threading.Timer(600,change_bot_status,(fromjid.getStripped(), u'i do nothing till '+time.strftime('%d.%m.%Y@%H:%M:%S GMT', time.gmtime()), 'away',1))
 					LAST['gch'][fromjid.getStripped()]['thr'].start()
 
+
+
 def presenceHnd(con, prs):
 	fromjid = prs.getFrom()
 	if user_level(fromjid,fromjid.getStripped())==-100:
@@ -665,7 +614,6 @@ def presenceHnd(con, prs):
 	ptype = prs.getType()
 	groupchat = fromjid.getStripped()
 	nick = fromjid.getResource()
-	item = findPresenceItem(prs)
 	INFO['prs'] += 1
 	
 	if ptype == 'subscribe':
@@ -675,7 +623,7 @@ def presenceHnd(con, prs):
 
 	if groupchat in GROUPCHATS:
 		if ptype == 'unavailable':
-			jid = item['jid']
+			jid = prs.getJid()
 			scode = prs.getStatusCode()
 			reason = prs.getStatus()
 			if scode == '303':
@@ -698,7 +646,7 @@ def presenceHnd(con, prs):
 						pass
 				call_leave_handlers(groupchat, nick, reason, scode)
 		elif ptype == 'available' or ptype == None:
-			jid = item['jid']
+			jid = prs.getJid()
 			afl=prs.getAffiliation()
 			role=prs.getRole()
 			if not jid:
@@ -833,13 +781,8 @@ def start():
 		fp = file('storm.pid', 'r')
 		p = fp.read()
 		fp.close()
-		if p <> pid:
-			os.kill(int(p), 3)
-			time.sleep(1)
-			try:
-				os.kill(int(p), 9)
-			except:
-				pass
+		if not p == pid: 
+			os.kill(int(p), 9)
 			sys.stdout.write('pid %s killed.. ' % (p, ))
 	except: pass
 

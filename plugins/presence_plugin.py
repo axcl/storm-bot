@@ -25,7 +25,8 @@ def handler_presence_ra_change(prs):
 	groupchat = prs.getFrom().getStripped()
 	nick = prs.getFrom().getResource()
 	jid = get_true_jid(groupchat+'/'+nick)
-	item = findPresenceItem(prs)
+	aff = prs.getAffiliation()
+	role = prs.getRole()
 	if jid in GLOBACCESS:
 		return
 	else:
@@ -34,8 +35,6 @@ def handler_presence_ra_change(prs):
 		else:
 			if groupchat in GROUPCHATS and nick in GROUPCHATS[groupchat]:
 				if jid != None:
-					role = item['role']
-					aff = item['affiliation']
 					if role in ROLES:
 						accr = ROLES[role]
 						if role=='moderator' or user_level(jid,groupchat)>=15:
